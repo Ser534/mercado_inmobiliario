@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mercado Inmobiliario - Documentación y Auditoría de Ofertas (534)</title>
+    <meta name="description" content="Plataforma modular para la documentación, negociación y auditoría de ofertas inmobiliarias del ecosistema 534.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <div id="app" class="app-container">
+        <!-- HEADER PRINCIPAL -->
+        <header class="main-header">
+            <div class="logo-group">
+                <div class="logo-badge">534</div>
+                <div class="header-titles">
+                    <h1>Mercado Inmobiliario</h1>
+                    <p class="subtitle">Documentación & Auditoría de Ofertas Formales</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div class="user-session-chip" id="sessionChip">
+                    <span class="user-role-badge">Invitado</span>
+                    <span class="user-email">buyer@test.com</span>
+                </div>
+                <button class="btn btn-secondary" id="btnSwitchUser">Cambiar Rol</button>
+            </div>
+        </header>
+
+        <!-- KPI STATS CARDS -->
+        <section class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <span class="stat-label">Total Ofertas</span>
+                <span class="stat-value" id="statTotalOffers">-</span>
+                <span class="stat-foot">Registros documentados</span>
+            </div>
+            <div class="stat-card accent">
+                <span class="stat-label">Negociaciones Activas</span>
+                <span class="stat-value" id="statActiveNegs">-</span>
+                <span class="stat-foot">En curso o contraoferta</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Volumen Ofertado</span>
+                <span class="stat-value" id="statTotalVolume">-</span>
+                <span class="stat-foot">Monto total ofertado</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Descuento Promedio</span>
+                <span class="stat-value" id="statAvgDiscount">-</span>
+                <span class="stat-foot">Respecto a precio lista</span>
+            </div>
+        </section>
+
+        <!-- SECCIÓN PRINCIPAL DE PROPIEDADES Y OFERTAS -->
+        <main class="content-layout">
+            <!-- PANEL IZQUIERDO: PROPIEDADES DISPONIBLES -->
+            <section class="panel-section properties-panel">
+                <div class="panel-header">
+                    <h2>Propiedades Publicadas</h2>
+                    <span class="badge" id="propCountBadge">0</span>
+                </div>
+                <div class="properties-list" id="propertiesList">
+                    <div class="loading-spinner">Cargando propiedades...</div>
+                </div>
+            </section>
+
+            <!-- PANEL DERECHO: OFERTAS & DETALLES -->
+            <section class="panel-section offers-panel">
+                <div class="panel-header">
+                    <h2 id="offersPanelTitle">Todas las Ofertas Registradas</h2>
+                    <button class="btn btn-primary" id="btnNewOffer">+ Documentar Oferta</button>
+                </div>
+
+                <div class="filter-bar">
+                    <button class="filter-chip active" data-status="">Todas</button>
+                    <button class="filter-chip" data-status="pending">Pendientes</button>
+                    <button class="filter-chip" data-status="countered">Contraoferta</button>
+                    <button class="filter-chip" data-status="accepted">Aceptadas</button>
+                    <button class="filter-chip" data-status="rejected">Rechazadas</button>
+                </div>
+
+                <div class="offers-table-container">
+                    <table class="offers-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Propiedad</th>
+                                <th>Comprador</th>
+                                <th>Monto Ofertado</th>
+                                <th>Comisiones Est.</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="offersTableBody">
+                            <tr>
+                                <td colspan="7" class="text-center">Cargando ofertas...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+
+        <!-- MODAL: REGISTRAR NUEVA OFERTA -->
+        <div class="modal-backdrop" id="offerModal">
+            <div class="modal-card">
+                <div class="modal-header">
+                    <h3>Documentar Nueva Oferta Formal</h3>
+                    <button class="btn-close" id="btnCloseOfferModal">&times;</button>
+                </div>
+                <form id="offerForm">
+                    <div class="form-group">
+                        <label for="formPropertySelect">Propiedad de Destino</label>
+                        <select id="formPropertySelect" required class="form-input">
+                            <option value="">Seleccione una propiedad...</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="formAmountARS">Monto de la Oferta (ARS)</label>
+                        <input type="number" id="formAmountARS" min="1000" step="1000" placeholder="Ej: 11500000" required class="form-input">
+                        <small class="help-text">Se almacenará internamente en centavos como <code>int64</code>.</small>
+                    </div>
+
+                    <div class="fee-preview-box" id="feePreviewBox">
+                        <div class="fee-row">
+                            <span>Comisión Martillero (3%):</span>
+                            <strong id="prevMartilleroFee">$0</strong>
+                        </div>
+                        <div class="fee-row sub">
+                            <span>Plataforma 534 (1% de Martillero):</span>
+                            <strong id="prevPlatformFee">$0</strong>
+                        </div>
+                        <div class="fee-row highlight">
+                            <span>Martillero Neto (99% restante):</span>
+                            <strong id="prevNetBrokerFee">$0</strong>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="formConditions">Condiciones de la Oferta & Forma de Pago</label>
+                        <textarea id="formConditions" rows="3" placeholder="Ej: Pago al contado dentro de los 15 días con billetes dólar..." class="form-input"></textarea>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" id="btnCancelOffer">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">Registrar Oferta Formal</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- DRAWER DE AUDITORÍA Y LÍNEA DE TIEMPO -->
+        <div class="drawer-backdrop" id="auditDrawer">
+            <div class="drawer-content">
+                <div class="drawer-header">
+                    <h3>Historial de Auditoría de Oferta #<span id="auditOfferId">-</span></h3>
+                    <button class="btn-close" id="btnCloseDrawer">&times;</button>
+                </div>
+                <div class="drawer-body">
+                    <div class="offer-summary-box" id="auditSummaryBox"></div>
+
+                    <h4>Línea de Tiempo de Negociación</h4>
+                    <div class="timeline" id="auditTimeline">
+                        <div class="timeline-empty">Cargando historial...</div>
+                    </div>
+
+                    <!-- CONTRAOFERTA RÁPIDA -->
+                    <div class="counter-box" id="counterBox">
+                        <h4>Enviar Contraoferta / Cambiar Estado</h4>
+                        <div class="form-group">
+                            <label for="counterAmountARS">Monto Contraoferta (ARS)</label>
+                            <input type="number" id="counterAmountARS" class="form-input" placeholder="Ej: 11800000">
+                        </div>
+                        <div class="form-group">
+                            <label for="counterNote">Nota / Observación</label>
+                            <input type="text" id="counterNote" class="form-input" placeholder="Ej: Acepto pero con entrega en 30 días">
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn btn-success" id="btnAcceptOffer">Aceptar Oferta</button>
+                            <button class="btn btn-warning" id="btnSendCounter">Enviar Contraoferta</button>
+                            <button class="btn btn-danger" id="btnRejectOffer">Rechazar Oferta</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

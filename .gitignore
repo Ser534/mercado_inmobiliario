@@ -1,0 +1,16 @@
+# SQLite databases
+*.db
+*.db-wal
+*.db-shm
+
+# Environment configuration
+.env
+.env.*
+
+# Go compiled binaries
+server
+main
+*.exe
+
+# User uploads
+/uploads/
